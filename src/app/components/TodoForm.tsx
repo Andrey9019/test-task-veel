@@ -29,14 +29,13 @@ const TodoForm = ({ onAddTodo }: TodoFormProps) => {
       completed: false,
     };
 
-    // onAddTodo(newTodo);
+    onAddTodo(newTodo);
 
     try {
       const res = await axios.post<Todo>(
-        "https://jsonplaceholder.typicode.comtodos",
+        "https://jsonplaceholder.typicode.com/todos",
         newTodo
       );
-      onAddTodo({ ...res.data, id: itsID });
 
       if (res.data.id !== itsID) {
         return;
