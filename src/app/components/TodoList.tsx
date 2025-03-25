@@ -50,9 +50,13 @@ const TodoList = () => {
   return (
     <ul className=" flex flex-col mx-auto mt-6 p-4">
       {todos.map((todo) => (
-        <li key={todo.id} className="p-2 flex justify-between">
+        <li key={todo.id} className="p-2 flex justify-between border-b">
           <p>{todo.title}</p>
-          <p>{todo.completed ? "Completed" : "Not Completed"}</p>
+          <p
+            className={`${todo.completed ? "text-green-600" : "text-red-600"}`}
+          >
+            {todo.completed ? "Completed" : "Not Completed"}
+          </p>
         </li>
       ))}
     </ul>
