@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 import { Todo } from "@/app/types";
+import TodoForm from "./TodoForm";
 
 const TodoList = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -47,19 +48,29 @@ const TodoList = () => {
       </div>
     );
 
+  const addTodo = (newTodo: Todo) => {
+    setTodos((prevTodos) => [...prevTodos, newTodo]);
+  };
+
   return (
-    <ul className=" flex flex-col mx-auto mt-6 p-4">
-      {todos.map((todo) => (
-        <li key={todo.id} className="p-2 flex justify-between border-b">
-          <p>{todo.title}</p>
-          <p
-            className={`${todo.completed ? "text-green-600" : "text-red-600"}`}
-          >
-            {todo.completed ? "Completed" : "Not Completed"}
-          </p>
-        </li>
-      ))}
-    </ul>
+    <div className="">
+      <TodoForm onAddTodo={addTodo} />
+
+      <ul className=" flex flex-col mx-auto mt-6 p-4">
+        {todos.map((todo) => (
+          <li key={todo.id} className="p-2 flex justify-between border-b">
+            <p>{todo.title}</p>
+            <p
+              className={`${
+                todo.completed ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {todo.completed ? "Completed" : "Not Completed"}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 };
 export default TodoList;
