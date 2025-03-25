@@ -13,6 +13,18 @@ const TodoList = () => {
 
   const [error, setError] = useState<string | null>(null);
 
+  const handleDeleteTodo = async (id: number) => {
+    const prevTodos = [...todos];
+    setTodos(todos.filter((todo) => todo.id !== id));
+    try {
+      await axios.delete(`https://jsonplaceholder.typicode.com/todos/${id}`);
+    } catch (error) {
+      console.log("error", error);
+      alert("Error deleting todo");
+      setTodos(prevTodos);
+    }
+  };
+
   const fetchTodos = async () => {
     setLoading(true);
     setError(null);
@@ -58,15 +70,27 @@ const TodoList = () => {
 
       <ul className=" flex flex-col mx-auto mt-6 p-4">
         {todos.map((todo) => (
-          <li key={todo.id} className="p-2 flex justify-between border-b">
+          <li
+            key={todo.id}
+            className="p-2 flex items-center justify-between border-b"
+          >
             <p>{todo.title}</p>
-            <p
-              className={`${
-                todo.completed ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              {todo.completed ? "Completed" : "Not Completed"}
-            </p>
+            <div className="flex items-center">
+              <p
+                className={`${
+                  todo.completed ? "text-green-600" : "text-red-600"
+                }`}
+              >
+                {todo.completed ? "Completed" : "Not Completed"}
+              </p>
+              <button
+                type="button"
+                className="ml-2 p-1 border rounded cursor-pointer"
+                onClick={() => handleDeleteTodo(todo.id)}
+              >
+                ❌
+              </button>
+            </div>
           </li>
         ))}
       </ul>
