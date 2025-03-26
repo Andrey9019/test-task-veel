@@ -1,75 +1,53 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import axios from "axios";
-
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { todoListApi } from "@/app/api/api";
 import { Todo } from "@/app/types";
 import TodoForm from "./TodoForm";
 
-const TodoList = () => {
-  const [todos, setTodos] = useState<Todo[]>([]);
+export const TodoList = () => {
+  const queryClient = useQueryClient();
 
-  const [loading, setLoading] = useState(true);
+  const {
+    data: todos,
+    isError,
+    isLoading,
+  } = useQuery({
+    queryKey: ["todos"],
+    queryFn: todoListApi.getTodoList,
+  });
 
-  const [error, setError] = useState<string | null>(null);
-
-  const handleDeleteTodo = async (id: number) => {
-    const prevTodos = [...todos];
-    setTodos(todos.filter((todo) => todo.id !== id));
-    try {
-      await axios.delete(`https://jsonplaceholder.typicode.com/todos/${id}`);
-    } catch (error) {
-      console.log("error", error);
-      alert("Error deleting todo");
-      setTodos(prevTodos);
-    }
-  };
-
-  const fetchTodos = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await axios.get<Todo[]>(
-        "https://jsonplaceholder.typicode.com/todos?_limit=10"
+  const deleteTodoMutation = useMutation({
+    mutationFn: todoListApi.deleteTodo,
+    onSuccess: (_, id) => {
+      queryClient.setQueryData(["todos"], (oldTodos: Todo[] | undefined) =>
+        oldTodos ? oldTodos.filter((todo) => todo.id !== id) : []
       );
-      setTodos(res.data);
-    } catch {
-      setError("Error load todo");
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
 
-  useEffect(() => {
-    fetchTodos();
-  }, []);
+  if (isLoading) return <p className="text-xl text-center mt-4">Loaging...</p>;
 
-  if (loading) return <p className="text-xl text-center mt-4">Loaging...</p>;
-
-  if (error)
+  if (isError)
     return (
       <div className="flex flex-col items-center">
-        <p className="text-xl text-center mt-4">{error}</p>
+        <p className="text-xl text-center mt-4">
+          Виникла помилка, спробуй ще раз
+        </p>
         <button
           className="text-xl text-center mt-4 cursor-pointer border rounded-full p-2"
-          onClick={fetchTodos}
+          onClick={todoListApi.getTodoList}
         >
           Try again
         </button>
       </div>
     );
 
-  const addTodo = (newTodo: Todo) => {
-    setTodos((prevTodos) => [...prevTodos, newTodo]);
-  };
-
   return (
     <div className="">
-      <TodoForm onAddTodo={addTodo} />
-
+      <TodoForm />
       <ul className=" flex flex-col mx-auto mt-6 p-4">
-        {todos.map((todo) => (
+        {todos?.map((todo) => (
           <li
             key={todo.id}
             className="p-2 flex items-center justify-between border-b"
@@ -86,7 +64,7 @@ const TodoList = () => {
               <button
                 type="button"
                 className="ml-2 p-1 border rounded cursor-pointer"
-                onClick={() => handleDeleteTodo(todo.id)}
+                onClick={() => deleteTodoMutation.mutate(todo.id)}
               >
                 ❌
               </button>
@@ -97,4 +75,3 @@ const TodoList = () => {
     </div>
   );
 };
-export default TodoList;

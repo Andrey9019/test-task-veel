@@ -1,52 +1,38 @@
 "use client";
 
 import { useState } from "react";
-import axios from "axios";
-
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { todoListApi } from "@/app/api/api";
 import { Todo } from "@/app/types";
 
-type TodoFormProps = {
-  onAddTodo: (todo: Todo) => void;
-};
-
-const TodoForm = ({ onAddTodo }: TodoFormProps) => {
+const TodoForm = () => {
   const [title, setTitle] = useState("");
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const itsID = new Date().getTime();
+
+  const createTodoMutation = useMutation({
+    mutationFn: todoListApi.addTodo,
+    onSuccess: (newTodo) => {
+      queryClient.setQueryData(["todos"], (oldTodos: Todo[] | undefined) => [
+        ...(oldTodos || []),
+
+        { ...newTodo, id: itsID },
+      ]);
+      setTitle("");
+    },
+  });
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
 
     if (!title.trim()) return;
 
-    setLoading(true);
-
-    const itsID = new Date().getTime();
-
-    const newTodo: Todo = {
+    createTodoMutation.mutate({
       userId: 1,
-      id: itsID,
       title,
       completed: false,
-    };
-
-    onAddTodo(newTodo);
-
-    try {
-      const res = await axios.post<Todo>(
-        "https://jsonplaceholder.typicode.com/todos",
-        newTodo
-      );
-
-      if (res.data.id !== itsID) {
-        return;
-      }
-    } catch (error) {
-      console.error("Error adding todo:", error);
-      alert("Error adding todo");
-    } finally {
-      setTitle("");
-      setLoading(false);
-    }
+    });
   };
 
   return (
@@ -61,8 +47,11 @@ const TodoForm = ({ onAddTodo }: TodoFormProps) => {
         placeholder="Text a new todo..."
         className=" p-2 border-b border-l"
       />
-      <button className="text-xl text-center mt-4 cursor-pointer border rounded-full p-2">
-        {loading ? "Adding..." : "Add Todo"}
+      <button
+        type="submit"
+        className="text-xl text-center mt-4 cursor-pointer border rounded-full p-2"
+      >
+        {createTodoMutation.isPending ? "Adding..." : "Add Todo"}
       </button>
     </form>
   );
